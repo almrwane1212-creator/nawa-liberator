@@ -2,44 +2,55 @@ import streamlit as st
 import hashlib
 import time
 
-# --- محرك الهوية (مدمج هنا لحل مشكلة الاستيراد) ---
+# --- محرك النواة ---
 def generate_nawa_did(user_seed):
-    timestamp = str(time.time())
-    raw_id = user_seed + timestamp
-    return "did:nawa:" + hashlib.sha256(raw_id.encode()).hexdigest()[:24]
+    return "did:nawa:" + hashlib.sha256(user_seed.encode()).hexdigest()[:24]
 
-# --- إعدادات الواجهة ---
-st.set_page_config(page_title="NAWA | النواة", page_icon="🛡️", layout="centered")
+# محاكاة لجلب محتوى حقيقي (بناءً على النية)
+def get_nawa_content(intent):
+    content_map = {
+        "تعلم مهارة": "https://www.youtube.com/embed/dQw4w9WgXcQ", # مثال لرابط تعليمي
+        "استكشاف إبداعي": "https://www.youtube.com/embed/3JZ_D3ELwOQ",
+        "ترفيه واعٍ": "https://www.youtube.com/embed/2Vv-BfVoq4g"
+    }
+    return content_map.get(intent, "https://www.youtube.com/embed/dQw4w9WgXcQ")
 
+# --- الواجهة ---
+st.set_page_config(page_title="NAWA | النواة", layout="wide")
 st.title("🛡️ مـنصة نـوى (NAWA)")
-st.subheader("استعد سيادتك الرقمية الآن")
 
-# القسم الأول: الهوية
-st.sidebar.header("بوابة الهوية")
-user_secret = st.sidebar.text_input("أدخل جملتك السرية لتوليد الـ DID:", type="password")
-
+# لوحة التحكم الجانبية
+st.sidebar.header("👤 محفظة الهوية")
+user_secret = st.sidebar.text_input("الجملة السرية:", type="password")
 if user_secret:
-    did = generate_nawa_did(user_secret)
-    st.sidebar.success(f"معرفك اللامركزي نشط:\n{did}")
+    st.sidebar.info(f"DID: {generate_nawa_did(user_secret)}")
+    st.sidebar.metric(label="رصيد $NAWA", value="150.50", delta="+10.25")
 
-# القسم الثاني: واجهة النية
-st.write("---")
-st.header("ماذا تريد أن تنجز الآن؟")
-col1, col2 = st.columns(2)
+# منطقة العمل الرئيسية
+st.header("تحديد المسار")
+col1, col2 = st.columns([1, 2])
 
 with col1:
-    intent = st.selectbox("اختر نيتك:", ["تعلم مهارة", "استكشاف إبداعي", "ترفيه واعٍ", "تواصل هادف"])
+    intent = st.selectbox("ما هي نيتك الآن؟", ["تعلم مهارة", "استكشاف إبداعي", "ترفيه واعٍ"])
+    duration = st.number_input("المدة (بالدقائق):", min_value=1, value=10)
+    start_btn = st.button("🚀 ابدأ جلسة السيادة")
 
 with col2:
-    duration = st.slider("كم دقيقة تخصص لهذه النية؟", 5, 120, 20)
-
-if st.button("تفعيل وكيل نوى الذكي"):
-    st.balloons()
-    st.info(f"🚀 تم عزل المشتتات. وكيلك الذكي يحلل الويب لخدمة نيتك في ({intent}).")
-    
-    with st.spinner('جاري الاتصال بالشبكة اللامركزية...'):
-        time.sleep(2)
-        st.write("### 💎 نتائج منقية لك:")
-        st.checkbox("محتوى مقترح 1: مقدمة في الويب 3")
-        st.checkbox("محتوى مقترح 2: كيف تسيطر على وقتك")
+    if start_btn:
+        st.success(f"جاري البحث عن محتوى يخدم نية ({intent})...")
+        video_url = get_nawa_content(intent)
+        
+        # عرض الفيديو داخل المنصة (بدون تشتيت)
+        st.video(video_url)
+        
+        # عداد الوقت الحقيقي
+        st.write("---")
+        st.warning(f"⚠️ وضع التركيز نشط. لا تغادر الصفحة لتربح المكافأة.")
+        progress_bar = st.progress(0)
+        for i in range(100):
+            time.sleep(0.1) # محاكاة للوقت (للتجربة السريعة)
+            progress_bar.progress(i + 1)
+        
+        st.balloons()
+        st.success("🎉 أحسنت! التزمت بنيتك. تم إضافة 5 $NAWA لمحفظتك.")
         
