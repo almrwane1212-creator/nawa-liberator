@@ -2,49 +2,54 @@ import streamlit as st
 import hashlib
 import time
 
-# --- محرك النواة ---
+# --- 1. محرك النواة والهوية ---
 def generate_nawa_did(user_seed):
     return "did:nawa:" + hashlib.sha256(user_seed.encode()).hexdigest()[:24]
 
-# محاكاة لجلب محتوى حقيقي (بناءً على النية)
-# --- 1. محرك البحث الذكي (نسخة الروابط المباشرة) ---
-def get_dynamic_content(topic):
-    search_query = topic.replace(" ", "+")
-    # نستخدم رابط البحث المباشر لضمان التوافق مع سياسات يوتيوب
-    return f"https://www.youtube.com/embed?listType=search&list={search_query}"
+# --- 2. إعدادات الواجهة ---
+st.set_page_config(page_title="NAWA | النواة", layout="wide")
+st.title("🛡️ مـنصة نـوى (NAWA)")
 
-# --- 2. منطقة العمل الرئيسية ---
+# لوحة التحكم الجانبية
+st.sidebar.header("👤 محفظة الهوية")
+user_secret = st.sidebar.text_input("الجملة السرية:", type="password")
+if user_secret:
+    st.sidebar.info(f"DID: {generate_nawa_did(user_secret)}")
+    st.sidebar.metric(label="رصيد $NAWA", value="155.50", delta="+5.00")
+
+# --- 3. منطقة البحث والسيادة ---
 st.header("تحديد المسار والبحث الذكي")
-col1, col2 = st.columns([1, 2])
+user_topic = st.text_input("عن ماذا تريد أن تتعلم اليوم؟", placeholder="اكتب موضوعك هنا...")
 
-with col1:
-    user_topic = st.text_input("عن ماذا تريد أن تتعلم اليوم؟", placeholder="مثلاً: بايثون، الذكاء الاصطناعي...")
-    duration = st.number_input("المدة المتوقعة (دقائق):", min_value=1, value=10)
-    start_btn = st.button("🚀 تفعيل محرك البحث السيادي")
+if user_topic:
+    search_query = user_topic.replace(" ", "+")
+    # رابط البحث المباشر
+    video_url = f"https://www.youtube.com/results?search_query={search_query}"
+    embed_url = f"https://www.youtube.com/embed?listType=search&list={search_query}"
 
-with col2:
-    if start_btn and user_topic:
-        st.success(f"جاري تنقية النتائج لـ: {user_topic}")
-        embed_url = get_dynamic_content(user_topic)
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        st.write(f"### 🎯 نيتك: {user_topic}")
+        st.info("إذا لم يظهر الفيديو بجانبك، استخدم الزر بالأسفل للفتح المباشر.")
+        # زر الفتح الخارجي المضمون 100%
+        st.link_button("🔗 فتح قائمة الفيديوهات في نافذة جديدة", video_url)
         
-        # عرض نتائج البحث داخل إطار مدمج
+        if st.button("✅ ابدأ الجلسة واحصد المكافأة"):
+            progress_bar = st.progress(0)
+            for i in range(100):
+                time.sleep(0.05)
+                progress_bar.progress(i + 1)
+            st.balloons()
+            st.success("تمت إضافة 5 $NAWA لرصيدك!")
+
+    with col2:
+        # محاولة العرض داخل التطبيق
         st.components.v1.iframe(embed_url, height=450, scrolling=True)
-        
-        # نظام المكافآت وعداد الوقت
-        st.write("---")
-        progress_bar = st.progress(0)
-        st.warning("⚠️ وضع التركيز نشط: المكافأة مرتبطة بإنهاء الوقت.")
-        for i in range(100):
-            time.sleep(0.05) # محاكاة للوقت للتجربة
-            progress_bar.progress(i + 1)
-        
-        st.balloons()
-        st.success(f"تمت المهمة! أضفنا 5 $NAWA لرصيدك لبحثك عن {user_topic}")
 
-# --- 3. نظام دعم المبدعين ---
+# --- 4. نظام دعم المبدعين ---
 st.write("---")
 st.subheader("🙌 هل أعجبك المحتوى؟")
-tip_amount = st.slider("اختر مبلغا لدعم المبدع من أرباحك:", 0.1, 5.0, 0.5)
-if st.button("إرسال دعم $NAWA للمبدع"):
-    st.success(f"تم إرسال {tip_amount} $NAWA مباشرة. شكراً لتقديرك!")
-    
+tip = st.slider("دعم المبدع من أرباحك:", 0.1, 5.0, 0.5)
+if st.button("إرسال دعم $NAWA"):
+    st.success(f"تم إرسال {tip} $NAWA بنجاح!")
