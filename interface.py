@@ -7,61 +7,45 @@ def generate_nawa_did(user_seed):
     return "did:nawa:" + hashlib.sha256(user_seed.encode()).hexdigest()[:24]
 
 # محاكاة لجلب محتوى حقيقي (بناءً على النية)
-def get_nawa_content(intent):
-    content_map = {
-        "تعلم مهارة": "https://www.youtube.com/embed/dQw4w9WgXcQ", # مثال لرابط تعليمي
-        "استكشاف إبداعي": "https://www.youtube.com/embed/3JZ_D3ELwOQ",
-        "ترفيه واعٍ": "https://www.youtube.com/embed/2Vv-BfVoq4g"
-    }
-    return content_map.get(intent, "https://www.youtube.com/embed/dQw4w9WgXcQ")
+        
+# --- 1. محرك البحث الذكي الجديد ---
+def get_dynamic_content(topic):
+    # تحويل نص البحث إلى رابط يوتيوب مدمج وآمن
+    search_query = topic.replace(" ", "+")
+    return f"https://www.youtube.com/embed?listType=search&list={search_query}"
 
-# --- الواجهة ---
-st.set_page_config(page_title="NAWA | النواة", layout="wide")
-st.title("🛡️ مـنصة نـوى (NAWA)")
-
-# لوحة التحكم الجانبية
-st.sidebar.header("👤 محفظة الهوية")
-user_secret = st.sidebar.text_input("الجملة السرية:", type="password")
-if user_secret:
-    st.sidebar.info(f"DID: {generate_nawa_did(user_secret)}")
-    st.sidebar.metric(label="رصيد $NAWA", value="150.50", delta="+10.25")
-
-# منطقة العمل الرئيسية
-st.header("تحديد المسار")
+# --- 2. منطقة العمل الرئيسية المحدثة ---
+st.header("تحديد المسار والبحث الذكي")
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    intent = st.selectbox("ما هي نيتك الآن؟", ["تعلم مهارة", "استكشاف إبداعي", "ترفيه واعٍ"])
+    # خانة بحث حرة بدلاً من الاختيارات الثابتة
+    user_topic = st.text_input("عن ماذا تريد أن تتعلم اليوم؟", placeholder="مثلاً: بايثون، الذكاء الاصطناعي...")
     duration = st.number_input("المدة (بالدقائق):", min_value=1, value=10)
-    start_btn = st.button("🚀 ابدأ جلسة السيادة")
+    start_btn = st.button("🚀 تفعيل محرك البحث السيادي")
 
 with col2:
-    if start_btn:
-        st.success(f"جاري البحث عن محتوى يخدم نية ({intent})...")
-        video_url = get_nawa_content(intent)
+    if start_btn and user_topic:
+        st.success(f"جاري تنقية النتائج لـ: {user_topic}")
+        embed_url = get_dynamic_content(user_topic)
         
-        # عرض الفيديو داخل المنصة (بدون تشتيت)
-        st.video(video_url)
+        # عرض نتائج البحث مباشرة داخل تطبيقك
+        st.components.v1.iframe(embed_url, height=450, scrolling=True)
         
-        # عداد الوقت الحقيقي
+        # نظام المكافآت وعداد الوقت
         st.write("---")
-        st.warning(f"⚠️ وضع التركيز نشط. لا تغادر الصفحة لتربح المكافأة.")
         progress_bar = st.progress(0)
+        st.warning("⚠️ وضع التركيز نشط: المكافأة مرتبطة بإنهاء الوقت.")
         for i in range(100):
-            time.sleep(0.1) # محاكاة للوقت (للتجربة السريعة)
+            time.sleep(0.1) # محاكاة للوقت (يمكنك زيادته لاحقاً)
             progress_bar.progress(i + 1)
         
         st.balloons()
-        st.success("🎉 أحسنت! التزمت بنيتك. تم إضافة 5 $NAWA لمحفظتك.")
-                # --- نظام دعم المبدعين الجديد ---
-        st.write("---")
-        st.subheader("🙌 هل أعجبك المحتوى؟")
-        tip_amount = st.slider("اختر مبلغا لدعم المبدع من أرباحك:", 0.1, 5.0, 0.5)
-        
-        if st.button("إرسال دعم $NAWA للمبدع"):
-            # محاكاة لعملية التحويل عبر البلوكشين
-            with st.spinner('جاري تنفيذ التحويل اللامركزي...'):
-                time.sleep(1.5)
-                st.success(f"تم إرسال {tip_amount} $NAWA مباشرة لمحفظة المبدع. شكراً لتقديرك!")
-                
-        
+        st.success(f"تمت المهمة! أضفنا 5 $NAWA لرصيدك لبحثك عن {user_topic}")
+
+# --- 3. نظام دعم المبدعين ---
+st.write("---")
+st.subheader("🙌 هل أعجبك المحتوى؟")
+tip_amount = st.slider("اختر مبلغا لدعم المبدع من أرباحك:", 0.1, 5.0, 0.5)
+if st.button("إرسال دعم $NAWA للمبدع"):
+    st.success(f"تم إرسال {tip_amount} $NAWA مباشرة. شكراً لتقديرك!")
