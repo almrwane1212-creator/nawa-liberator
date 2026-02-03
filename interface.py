@@ -11,9 +11,9 @@ if 'chat_history' not in st.session_state:
 if 'registered_users' not in st.session_state:
     st.session_state.registered_users = set()
 
-# --- 2. إعدادات الواجهة الشاملة ---
-st.set_page_config(page_title="NAWA Global", layout="wide")
-st.title("🛡️ مـحرك نـوى العالمي (Universal Search)")
+# --- 2. إعدادات الواجهة الاحترافية ---
+st.set_page_config(page_title="NAWA Deep Search", layout="wide")
+st.title("🛡️ مـحرك نـوى للبحث العـميق (Knowledge OS)")
 
 with st.sidebar:
     st.header("⚙️ لوحة الإدارة")
@@ -23,48 +23,58 @@ with st.sidebar:
         st.metric("المستخدمون النشطون", len(st.session_state.registered_users))
     
     st.write("---")
-    user_secret = st.text_input("فعل هويتك للبحث والدردشة:", type="password")
+    user_secret = st.text_input("فعل هويتك السيادية:", type="password")
     if user_secret:
         my_did = generate_nawa_did(user_secret)
         st.session_state.registered_users.add(my_did)
-        st.info("هويتك السيادية نشطة ✅")
+        st.info("الهوية نشطة ✅")
 
-# --- 3. محرك البحث المتعدد المصادر ---
-tab_search, tab_social = st.tabs(["🌐 رادار الإنترنت", "💬 غرفة الدردشة"])
+# --- 3. محرك البحث العميق متعدد الأبعاد ---
+tab_deep, tab_social = st.tabs(["🚀 رادار المعرفة العميق", "💬 غرفة الدردشة"])
 
-with tab_search:
-    st.subheader("ابحث عن فيديوهات أو دورات في أي موقع")
-    col_input, col_source = st.columns([3, 1])
+with tab_deep:
+    col_input, col_type = st.columns([2, 1])
     
     with col_input:
-        topic = st.text_input("ما هو موضوعك اليوم؟", placeholder="مثلاً: تعلم التجارة الإلكترونية، شرح الفيزياء...")
+        topic = st.text_input("عن ماذا تريد أن تتعمق اليوم؟", placeholder="مثلاً: ميكانيكا الكم، أمن المعلومات...")
     
-    with col_source:
-        source = st.selectbox("المصدر:", ["كل المواقع (جوجل فيديو)", "يوتيوب", "فيميو (Vimeo)", "ديلي موشن"])
+    with col_type:
+        content_type = st.selectbox("نوع المحتوى المطلوب:", [
+            "🎥 فيديوهات تعليمية (YouTube/Vimeo)", 
+            "📚 كتب ومراجع (PDF)", 
+            "🔬 أبحاث وأوراق علمية (Scholar)", 
+            "💻 أكواد ومشاريع (GitHub)",
+            "📊 عرض تقديمي (PowerPoint)"
+        ])
 
     if topic:
-        # بناء روابط البحث بناءً على المصدر المختار
-        if source == "كل المواقع (جوجل فيديو)":
-            search_url = f"https://www.google.com/search?q={topic.replace(' ', '+')}&tbm=vid"
-        elif source == "يوتيوب":
-            search_url = f"https://www.youtube.com/results?search_query={topic.replace(' ', '+')}"
-        elif source == "فيميو (Vimeo)":
-            search_url = f"https://vimeo.com/search?q={topic.replace(' ', '+')}"
+        # بناء روابط البحث العميق (Google Dorking)
+        query = topic.replace(" ", "+")
+        
+        if "🎥" in content_type:
+            search_url = f"https://www.google.com/search?q={query}+tutorial+video"
+        elif "📚" in content_type:
+            search_url = f"https://www.google.com/search?q=filetype:pdf+{query}"
+        elif "🔬" in content_type:
+            search_url = f"https://scholar.google.com/scholar?q={query}"
+        elif "💻" in content_type:
+            search_url = f"https://github.com/search?q={query}"
         else:
-            search_url = f"https://www.dailymotion.com/search/{topic.replace(' ', '+')}"
+            search_url = f"https://www.google.com/search?q=filetype:ppt+{query}"
 
-        st.info(f"🔍 جاري البحث عن '{topic}' في {source}...")
+        st.success(f"🔍 تم توجيه الرادار نحو {content_type}")
         
-        # عرض بطاقة توجيه ذكية
-        st.success("✅ تم العثور على مصادر تعليمية!")
-        st.write("بسبب قيود الحماية في بعض المواقع، نوصي بفتح البحث في نافذة مستقلة لضمان أفضل جودة:")
-        
-        st.link_button(f"🚀 فتح نتائج {source} الآن", search_url)
-        
-        st.write("---")
-        if st.button("✅ سجلت دخولي وشاهدت (احصد 10 $NAWA)"):
-            st.balloons()
-            st.success("تم تسجيل نشاطك التعليمي بنجاح!")
+        # تصميم بطاقة النتيجة
+        with st.container(border=True):
+            st.write(f"### 🎯 الهدف: {topic}")
+            st.write(f"المصدر المقترح: {content_type}")
+            st.link_button(f"🔗 فتح مصادر {topic} الآن", search_url)
+            
+            st.write("---")
+            st.info("بعد حصولك على المعرفة، اضغط أدناه لتوثيق الجلسة.")
+            if st.button("✅ تمت المهمة بنجاح (+15 $NAWA)"):
+                st.balloons()
+                st.success("تم تسجيل القيمة المعرفية في محفظتك!")
 
 with tab_social:
     st.subheader("🌐 حائط النقاش الحر")
@@ -72,9 +82,9 @@ with tab_social:
     for msg in st.session_state.chat_history:
         chat_container.chat_message("user").write(f"**{msg['user']}**: {msg['text']}")
 
-    if prompt := st.chat_input("تفاعل مع المجتمع..."):
+    if prompt := st.chat_input("شارك ما تعلمته مع المجتمع..."):
         if not user_secret:
-            st.error("أدخل جملتك السرية في القائمة الجانبية أولاً!")
+            st.error("فعل هويتك أولاً!")
         else:
             display_name = generate_nawa_did(user_secret)[:10]
             st.session_state.chat_history.append({"user": display_name, "text": prompt})
