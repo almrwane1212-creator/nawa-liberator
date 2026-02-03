@@ -1,64 +1,67 @@
 import streamlit as st
 import hashlib
 import time
+from datetime import datetime
 
 # --- 1. محرك النواة والهوية ---
 def generate_nawa_did(user_seed):
     return "did:nawa:" + hashlib.sha256(user_seed.encode()).hexdigest()[:24]
 
-# --- 2. إعدادات الواجهة ---
-st.set_page_config(page_title="NAWA | النواة", layout="wide")
-st.title("🛡️ مـنصة نـوى (NAWA)")
+# --- 2. إعدادات المنصة ---
+st.set_page_config(page_title="NAWA Social", layout="wide")
 
-# لوحة التحكم الجانبية
-st.sidebar.header("👤 محفظة الهوية")
-user_secret = st.sidebar.text_input("الجملة السرية:", type="password")
-if user_secret:
-    st.sidebar.info(f"DID: {generate_nawa_did(user_secret)}")
-    st.sidebar.metric(label="رصيد $NAWA", value="155.50", delta="+5.00")
+# تهيئة الذاكرة (للمتابعين والدردشة)
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+if 'users_count' not in st.session_state:
+    st.session_state.users_count = 1  # أنت الأول دائمًا
 
-# --- 3. منطقة البحث والسيادة ---
-st.header("تحديد المسار والبحث الذكي")
-user_topic = st.text_input("عن ماذا تريد أن تتعلم اليوم؟", placeholder="اكتب موضوعك هنا...")
+# --- 3. لوحة تحكم المسؤول (Sidebar) ---
+st.sidebar.title("🛡️ إدارة النواة")
+if st.sidebar.checkbox("فتح لوحة المسؤول"):
+    st.sidebar.subheader("📊 إحصائيات حية")
+    st.sidebar.metric("المشتركون", st.session_state.users_count)
+    st.sidebar.write("آخر الهويات النشطة:")
+    st.sidebar.code(f"active_did: {hashlib.md5(str(time.time()).encode()).hexdigest()[:8]}")
 
-if user_topic:
-    search_query = user_topic.replace(" ", "+")
-    # رابط البحث المباشر
-    video_url = f"https://www.youtube.com/results?search_query={search_query}"
-    embed_url = f"https://www.youtube.com/embed?listType=search&list={search_query}"
-
-    col1, col2 = st.columns([1, 2])
-
-    with col1:
-        st.write(f"### 🎯 نيتك: {user_topic}")
-        st.info("إذا لم يظهر الفيديو بجانبك، استخدم الزر بالأسفل للفتح المباشر.")
-        # زر الفتح الخارجي المضمون 100%
-        st.link_button("🔗 فتح قائمة الفيديوهات في نافذة جديدة", video_url)
-        
-        if st.button("✅ ابدأ الجلسة واحصد المكافأة"):
-            progress_bar = st.progress(0)
-            for i in range(100):
-                time.sleep(0.05)
-                progress_bar.progress(i + 1)
-            st.balloons()
-            st.success("تمت إضافة 5 $NAWA لرصيدك!")
-
-    with col2:
-        # محاولة العرض داخل التطبيق
-        st.components.v1.iframe(embed_url, height=450, scrolling=True)
-
-# --- 4. نظام دعم المبدعين ---
-st.write("---")
-st.subheader("🙌 هل أعجبك المحتوى؟")
-tip = st.slider("دعم المبدع من أرباحك:", 0.1, 5.0, 0.5)
-if st.button("إرسال دعم $NAWA"):
-    st.success(f"تم إرسال {tip} $NAWA بنجاح!")
-# --- 5. لوحة تحكم المسؤول (تجريبية) ---
 st.sidebar.write("---")
-if st.sidebar.checkbox("عرض إحصائيات المنصة (للمسؤول فقط)"):
-    st.sidebar.subheader("📊 نشاط النواة")
-    # هنا سنربط مستقبلاً بقاعدة البيانات الحقيقية
-    st.sidebar.write("عدد المشتركين الجدد: 12")
-    st.sidebar.write("آخر الهويات المسجلة:")
-    st.sidebar.code("did:nawa:a1b2... (متصل الآن)")
+user_secret = st.sidebar.text_input("جملتك السرية (الهوية):", type="password")
+if user_secret:
+    my_did = generate_nawa_did(user_secret)
+    st.sidebar.success(f"هويتك: {my_did}")
+
+# --- 4. واجهة الدردشة والبحث ---
+st.title("🛡️ مـنصة نـوى الاجتماعية")
+
+tab1, tab2 = st.tabs(["🔍 البحث والسيادة", "💬 غرفة الدردشة العامة"])
+
+with tab1:
+    user_topic = st.text_input("ماذا ستتعلم اليوم؟")
+    if user_topic:
+        st.video(f"https://www.youtube.com/embed?listType=search&list={user_topic.replace(' ', '+')}")
+        if st.button("احصد المكافأة"):
+            st.balloons()
+            st.success("تم إضافة 5 $NAWA")
+
+with tab2:
+    st.subheader("🌐 دردشة النوايا المشتركة")
     
+    # عرض الرسائل
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(f"**{msg['user']}**: {msg['content']}")
+
+    # إدخال رسالة جديدة
+    if prompt := st.chat_input("اكتب رسالتك هنا..."):
+        user_name = my_did[:10] if user_secret else "مستخدم مجهول"
+        st.session_state.messages.append({"role": "user", "user": user_name, "content": prompt})
+        st.rerun()
+
+# --- 5. نظام المتابعة (تجريبي) ---
+st.write("---")
+col_did, col_follow = st.columns([3, 1])
+with col_did:
+    st.write("👤 مستخدمون قد تهمك متابعتهم (بناءً على نيتك)")
+with col_follow:
+    if st.button("متابعة الكل"):
+        st.toast("تمت متابعة المستخدمين بنجاح!")
