@@ -89,4 +89,3 @@ with tab_social:
             display_name = generate_nawa_did(user_secret)[:10]
             st.session_state.chat_history.append({"user": display_name, "text": prompt})
             st.rerun()
-            
