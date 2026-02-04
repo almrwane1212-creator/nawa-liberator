@@ -2,90 +2,121 @@ import streamlit as st
 import hashlib
 import time
 
-# --- 1. محرك الهوية والبيانات ---
+# --- 1. إعدادات الصفحة والـ SEO (يجب أن يكون أول أمر في الكود) ---
+st.set_page_config(
+    page_title="نوى | منصة السيادة المعرفية والبحث العميق",
+    page_icon="🛡️",
+    layout="wide",
+    menu_items={
+        'Get Help': 'https://nawa-liberator.streamlit.app',
+        'About': "# نوى هي منصة للبحث العميق وتحصيل المعرفة والسيادة الرقمية وتوليد الهوية المشفرة"
+    }
+)
+
+# --- 2. محرك القواعد والبيانات ---
 def generate_nawa_did(user_seed):
     return "did:nawa:" + hashlib.sha256(user_seed.encode()).hexdigest()[:24]
 
+# تهيئة الذاكرة الشاملة (Session State)
+if 'vault' not in st.session_state:
+    st.session_state.vault = {"balance": 0, "books": 0, "videos": 0, "research": 0, "exp": 0}
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
-if 'registered_users' not in st.session_state:
-    st.session_state.registered_users = set()
 
-# --- 2. إعدادات الواجهة الاحترافية ---
-st.set_page_config(page_title="NAWA Deep Search", layout="wide")
-st.title("🛡️ مـحرك نـوى للبحث العـميق (Knowledge OS)")
+# دالة لتحديد المستوى بناءً على الخبرة (EXP)
+def get_rank(exp):
+    if exp < 100: return "🌱 مستكشف ناشئ"
+    if exp < 500: return "🛡️ محارب معرفة"
+    if exp < 1500: return "📜 حكيم النواة"
+    return "♾️ سيادي مطلق"
 
+# --- 3. الواجهة الجانبية (Sidebar) ---
 with st.sidebar:
-    st.header("⚙️ لوحة الإدارة")
-    admin_pass = st.text_input("رمز المدير:", type="password")
-    if admin_pass == "nawa2026":
-        st.success("صلاحيات المؤسس نشطة")
-        st.metric("المستخدمون النشطون", len(st.session_state.registered_users))
+    st.image("https://cdn-icons-png.flaticon.com/512/2092/2092663.png", width=100)
+    st.title("بوابة السيادة")
+    user_secret = st.text_input("مفتاح الهوية (جملة السر):", type="password")
     
-    st.write("---")
-    user_secret = st.text_input("فعل هويتك السيادية:", type="password")
     if user_secret:
-        my_did = generate_nawa_did(user_secret)
-        st.session_state.registered_users.add(my_did)
-        st.info("الهوية نشطة ✅")
+        did = generate_nawa_did(user_secret)
+        rank = get_rank(st.session_state.vault['exp'])
+        st.success(f"الرتبة: {rank}")
+        st.metric("رصيد $NAWA", f"{st.session_state.vault['balance']} 🪙")
+        st.progress(min((st.session_state.vault['exp'] % 500) / 500, 1.0), text="التقدم للمستوى القادم")
+    else:
+        st.info("أدخل مفتاحك لبدء الاستحواذ المعرفي")
 
-# --- 3. محرك البحث العميق متعدد الأبعاد ---
-tab_deep, tab_social = st.tabs(["🚀 رادار المعرفة العميق", "💬 غرفة الدردشة"])
+# --- 4. أقسام المنصة الرئيسية ---
+tab_radar, tab_profile, tab_market, tab_social = st.tabs([
+    "📡 رادار البحث العميق", "📊 ملف السيادة", "🛒 المتجر الرقمي", "💬 غرفة التنسيق"
+])
 
-with tab_deep:
-    col_input, col_type = st.columns([2, 1])
-    
-    with col_input:
-        topic = st.text_input("عن ماذا تريد أن تتعمق اليوم؟", placeholder="مثلاً: ميكانيكا الكم، أمن المعلومات...")
-    
-    with col_type:
-        content_type = st.selectbox("نوع المحتوى المطلوب:", [
-            "🎥 فيديوهات تعليمية (YouTube/Vimeo)", 
-            "📚 كتب ومراجع (PDF)", 
-            "🔬 أبحاث وأوراق علمية (Scholar)", 
-            "💻 أكواد ومشاريع (GitHub)",
-            "📊 عرض تقديمي (PowerPoint)"
-        ])
+# القسم 1: الرادار (البحث والتحصيل)
+with tab_radar:
+    st.subheader("محرك البحث السيادي")
+    c1, c2 = st.columns([3, 1])
+    with c1:
+        topic = st.text_input("أدخل هدف الاستخراج (الموضوع):", placeholder="عن ماذا تبحث؟")
+    with c2:
+        dtype = st.selectbox("نوع الهدف:", ["فيديو 🎥", "كتاب PDF 📚", "بحث علمي 🔬"])
 
     if topic:
-        # بناء روابط البحث العميق (Google Dorking)
-        query = topic.replace(" ", "+")
+        queries = {
+            "فيديو 🎥": f"https://www.google.com/search?q={topic}+video",
+            "كتاب PDF 📚": f"https://www.google.com/search?q=filetype:pdf+{topic}",
+            "بحث علمي 🔬": f"https://scholar.google.com/scholar?q={topic}"
+        }
+        st.link_button(f"🚀 اختراق المسار وجلب {topic}", queries[dtype])
         
-        if "🎥" in content_type:
-            search_url = f"https://www.google.com/search?q={query}+tutorial+video"
-        elif "📚" in content_type:
-            search_url = f"https://www.google.com/search?q=filetype:pdf+{query}"
-        elif "🔬" in content_type:
-            search_url = f"https://scholar.google.com/scholar?q={query}"
-        elif "💻" in content_type:
-            search_url = f"https://github.com/search?q={query}"
-        else:
-            search_url = f"https://www.google.com/search?q=filetype:ppt+{query}"
-
-        st.success(f"🔍 تم توجيه الرادار نحو {content_type}")
-        
-        # تصميم بطاقة النتيجة
-        with st.container(border=True):
-            st.write(f"### 🎯 الهدف: {topic}")
-            st.write(f"المصدر المقترح: {content_type}")
-            st.link_button(f"🔗 فتح مصادر {topic} الآن", search_url)
-            
-            st.write("---")
-            st.info("بعد حصولك على المعرفة، اضغط أدناه لتوثيق الجلسة.")
-            if st.button("✅ تمت المهمة بنجاح (+15 $NAWA)"):
-                st.balloons()
-                st.success("تم تسجيل القيمة المعرفية في محفظتك!")
-
-with tab_social:
-    st.subheader("🌐 حائط النقاش الحر")
-    chat_container = st.container(height=300)
-    for msg in st.session_state.chat_history:
-        chat_container.chat_message("user").write(f"**{msg['user']}**: {msg['text']}")
-
-    if prompt := st.chat_input("شارك ما تعلمته مع المجتمع..."):
-        if not user_secret:
-            st.error("فعل هويتك أولاً!")
-        else:
-            display_name = generate_nawa_did(user_secret)[:10]
-            st.session_state.chat_history.append({"user": display_name, "text": prompt})
+        st.write("---")
+        if st.button("✅ توثيق الاستحواذ (+50 EXP | +25 $NAWA)"):
+            st.session_state.vault['balance'] += 25
+            st.session_state.vault['exp'] += 50
+            type_key = 'videos' if 'فيديو' in dtype else ('books' if 'كتاب' in dtype else 'research')
+            st.session_state.vault[type_key] += 1
+            st.balloons()
             st.rerun()
+
+# القسم 2: الملف الشخصي (Profile)
+with tab_profile:
+    st.header(f"📊 سجل السيادة | {get_rank(st.session_state.vault['exp'])}")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("📚 كتب مستخرجة", st.session_state.vault['books'])
+    col2.metric("🎥 فيديوهات محصورة", st.session_state.vault['videos'])
+    col3.metric("🔬 أبحاث موثقة", st.session_state.vault['research'])
+    
+    st.write("---")
+    st.subheader("🛡️ الهوية الرقمية المشفرة (DID)")
+    if user_secret:
+        st.code(generate_nawa_did(user_secret))
+        st.caption("هذا الكود هو بصمتك الفريدة في نظام نوى.")
+    else:
+        st.warning("أدخل الجملة السرية في القائمة الجانبية لتوليد هويتك.")
+
+# القسم 3: المتجر (Marketplace)
+with tab_market:
+    st.header("🛒 تبادل القيمة")
+    st.write(f"رصيدك الحالي: **{st.session_state.vault['balance']} $NAWA**")
+    shop_col1, shop_col2 = st.columns(2)
+    with shop_col1:
+        st.info("🔓 فتح دورة مشفرة (500 $NAWA)")
+        st.button("شراء الآن", key="buy1", disabled=st.session_state.vault['balance'] < 500)
+    with shop_col2:
+        st.warning("🔑 مفتاح المكتبة العميقة (1000 $NAWA)")
+        st.button("ترقية الحساب", key="buy2", disabled=st.session_state.vault['balance'] < 1000)
+
+# القسم 4: الدردشة (Social)
+with tab_social:
+    st.subheader("🌐 غرفة تنسيق المجتمع")
+    chat_container = st.container(height=350)
+    with chat_container:
+        for msg in st.session_state.chat_history:
+            st.chat_message("user").write(f"**{msg['user']}**: {msg['text']}")
+    
+    if prompt := st.chat_input("أرسل تحديثاً للمجتمع..."):
+        if user_secret:
+            u_name = generate_nawa_did(user_secret)[:8]
+            st.session_state.chat_history.append({"user": u_name, "text": prompt})
+            st.rerun()
+        else:
+            st.error("يجب تفعيل الهوية أولاً لتتمكن من الدردشة.")
+        
