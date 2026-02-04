@@ -1,3 +1,13 @@
+from streamlit_gsheets import GSheetsConnection
+
+# إنشاء اتصال بقاعدة البيانات
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+def save_user_data(did, balance, exp):
+    # كود لتحديث الصف الخاص بالمستخدم في Google Sheets
+    df = conn.read(worksheet="Sheet1")
+    # منطق التحديث (إضافة أو تعديل)
+    # ... سنقوم ببرمجة التفاصيل فور تجهيزك للرابط
 import streamlit as st
 import hashlib
 import requests
