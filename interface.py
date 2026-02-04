@@ -100,4 +100,27 @@ with tabs[3]:
     st.subheader("🛒 المتجر الرقمي")
     st.write("حول رصيدك إلى ميزات!")
     st.button("🔓 فتح أدوات البحث المتقدم (500 🪙)", disabled=True)
+    # --- إضافة قسم المتصفح المشفر داخل التبويبات ---
+with tabs[0]: # سنضعه داخل قسم الرادار أو كقسم مستقل
+    st.divider()
+    st.subheader("🌐 بوابة العبور الآمنة (Proxy)")
+    
+    url_to_proxy = st.text_input("أدخل رابط الموقع المحجوب (مثال: https://example.com):")
+    
+    if st.button("🚀 تصفح عبر نوى"):
+        if url_to_proxy:
+            try:
+                # محاكاة متصفح حقيقي لتجنب الحظر
+                headers = {'User-Agent': 'Mozilla/5.0'}
+                response = requests.get(url_to_proxy, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    st.success("تم الاتصال بنجاح عبر سيرفر نوى!")
+                    # عرض محتوى الموقع داخل إطار (Iframe) أو كنص
+                    st.components.v1.html(response.text, height=600, scrolling=True)
+                else:
+                    st.error(f"فشل الوصول: رمز الخطأ {response.status_code}")
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء التشفير: {e}")
+    
     
