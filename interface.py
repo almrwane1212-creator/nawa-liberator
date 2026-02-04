@@ -1,126 +1,134 @@
 import streamlit as st
 import hashlib
+import requests
+from datetime import datetime
 
-# --- 1. إعدادات المحركات والـ SEO ---
+# --- 1. إعدادات الصفحة وSEO ---
 st.set_page_config(
     page_title="نوى | NAWA OS",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="collapsed" # لجعلها تبدو كالموبايل عند الفتح
+    initial_sidebar_state="collapsed"
 )
 
-# دالة الهوية الرقمية
-def generate_nawa_did(user_seed):
-    return "did:nawa:" + hashlib.sha256(user_seed.encode()).hexdigest()[:24]
+# --- 2. وظائف النظام الخلفية ---
+def generate_did(secret):
+    """توليد هوية رقمية مشفرة"""
+    return "did:nawa:" + hashlib.sha256(secret.encode()).hexdigest()[:20]
 
-# تهيئة البيانات
+# تهيئة بيانات الجلسة (Database البدائية)
 if 'vault' not in st.session_state:
-    st.session_state.vault = {"balance": 0, "books": 0, "videos": 0, "research": 0, "exp": 0}
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
+    st.session_state.vault = {"balance": 100, "exp": 0, "logs": []}
+if 'chat' not in st.session_state:
+    st.session_state.chat = []
 
-# --- 2. التصميم الجمالي (CSS) لجعلها تشبه التطبيقات ---
+# --- 3. تصميم الواجهة (CSS) لتشبه التطبيقات ---
 st.markdown("""
     <style>
-    .main { background: linear-gradient(180deg, #0e1117 0%, #1a1c24 100%); }
-    div[st-decorator="true"] { display: none; }
-    .stButton>button {
-        border-radius: 20px;
-        border: 1px solid #4CAF50;
-        transition: 0.3s;
-    }
-    .stButton>button:hover { background-color: #4CAF50; color: white; }
+    .stApp { background-color: #0e1117; color: #ffffff; }
+    .stButton>button { width: 100%; border-radius: 12px; background-color: #2e7d32; color: white; border: none; }
+    .stTextInput>div>div>input { border-radius: 10px; }
+    .metric-card { background: #1a1c24; padding: 15px; border-radius: 15px; border: 1px solid #2e7d32; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. القائمة الجانبية (لوحة التحكم) ---
+# --- 4. القائمة الجانبية (Sidebar) ---
 with st.sidebar:
-    st.title("🛡️ بوابة نوى")
-    user_secret = st.text_input("مفتاحك السري (ID):", type="password")
-    if user_secret:
-        did = generate_nawa_did(user_secret)
-        st.success(f"الهوية نشطة")
-        st.metric("رصيدك الحالي", f"{st.session_state.vault['balance']} 🪙")
+    st.image("https://cdn-icons-png.flaticon.com/512/9438/9438567.png", width=80)
+    st.title("بوابة السيادة")
+    user_key = st.text_input("مفتاح الدخول السري:", type="password")
+    if user_key:
+        my_did = generate_did(user_key)
+        st.success("✅ الهوية نشطة")
+        st.code(my_did, language="text")
     st.divider()
-    st.caption("إصدار المنصة: v2.5 Stable")
+    st.info("إصدار البايثون: 3.12 | الحالة: مستقر")
 
-# --- 4. الواجهة الرئيسية (التنقل السريع) ---
-st.write("# 🛡️ مـنصة نـوى")
-st.caption("نظام الاستحواذ المعرفي والبحث العميق")
+# --- 5. الهيكل الرئيسي للتطبيق (Tabs) ---
+tabs = st.tabs(["🔍 الرادار", "🌐 نفق العبور (VPN)", "📊 الإحصائيات", "💬 التنسيق"])
 
-tabs = st.tabs(["🔍 الرادار", "👤 هويتي", "💬 المجتمع", "🛒 المتجر"])
-
-# --- قسم الرادار ---
+# --- TAB 1: الرادار (البحث العميق) ---
 with tabs[0]:
-    col_input, col_type = st.columns([3, 1])
-    with col_input:
-        topic = st.text_input("ماذا سنستكشف اليوم؟", placeholder="اكتب موضوع البحث هنا...")
-    with col_type:
-        dtype = st.selectbox("النوع", ["فيديو 🎥", "كتاب PDF 📚", "بحث علمي 🔬"])
-
-    if topic:
-        queries = {
-            "فيديو 🎥": f"https://www.google.com/search?q={topic}+video",
-            "كتاب PDF 📚": f"https://www.google.com/search?q=filetype:pdf+{topic}",
-            "بحث علمي 🔬": f"https://scholar.google.com/scholar?q={topic}"
+    st.header("🔍 رادار الاستحواذ المعرفي")
+    col_q, col_t = st.columns([3, 1])
+    with col_q:
+        query = st.text_input("ماذا تريد أن تصطاد اليوم؟", placeholder="مثال: هندسة الذكاء الاصطناعي")
+    with col_t:
+        category = st.selectbox("المصدر", ["كتب PDF 📚", "فيديوهات 🎥", "أبحاث 🔬"])
+    
+    if query:
+        search_urls = {
+            "كتب PDF 📚": f"https://www.google.com/search?q=filetype:pdf+{query}",
+            "فيديوهات 🎥": f"https://www.youtube.com/results?search_query={query}",
+            "أبحاث 🔬": f"https://scholar.google.com/scholar?q={query}"
         }
-        st.link_button(f"🚀 فتح مسار {topic}", queries[dtype], use_container_width=True)
+        st.link_button(f"🚀 إطلاق مسار البحث عن {query}", search_urls[category])
         
-        if st.button("📦 توثيق الاستحواذ وحصد المكافأة"):
-            st.session_state.vault['balance'] += 25
-            st.session_state.vault['exp'] += 50
+        if st.button("💰 توثيق المعرفة وحصد المكافأة"):
+            st.session_state.vault['balance'] += 50
+            st.session_state.vault['exp'] += 100
+            st.session_state.vault['logs'].append(f"تم البحث عن {query} في {datetime.now().strftime('%H:%M')}")
             st.balloons()
             st.rerun()
 
-# --- قسم الملف الشخصي ---
+# --- TAB 2: نفق العبور (المتصفح المشفر / VPN) ---
 with tabs[1]:
-    st.subheader("📊 إحصائيات السيادة")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("📚 كتب", st.session_state.vault['books'])
-    c2.metric("🎥 فيديو", st.session_state.vault['videos'])
-    c3.metric("✨ خبرة", st.session_state.vault['exp'])
+    st.header("🛡️ نفق العبور السيادي (Proxy)")
+    st.caption("تصفح المواقع من خلال سيرفرات وسيطة لحماية هويتك وتخطي الحجب.")
     
-    if user_secret:
-        st.info(f"كود الهوية DID: {generate_nawa_did(user_secret)}")
+    server_list = {
+        "🇩🇪 سيرفر ألمانيا": "https://api.allorigins.win/raw?url=",
+        "🇺🇸 سيرفر أمريكا": "https://api.codetabs.com/v1/proxy/?quest=",
+        "🌐 سيرفر عام": "https://p.ocean-proxy.com/query?url="
+    }
+    
+    chosen_srv = st.selectbox("اختر نقطة الانطلاق:", list(server_list.keys()))
+    site_url = st.text_input("أدخل رابط الموقع المستهدف:", placeholder="https://example.com")
+    
+    if st.button("فتح النفق الآمن ⚡"):
+        if site_url:
+            with st.spinner("جاري تشفير الاتصال..."):
+                final_link = server_list[chosen_srv] + site_url
+                st.markdown(f"""
+                    <div style="border: 2px solid #2e7d32; border-radius: 15px; overflow: hidden;">
+                        <iframe src="{final_link}" width="100%" height="600px" style="border:none;"></iframe>
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.warning("يرجى إدخال رابط الموقع أولاً.")
 
-# --- قسم الدردشة ---
+# --- TAB 3: الإحصائيات (Vault) ---
 with tabs[2]:
-    st.subheader("🌐 تنسيق المجتمع")
-    for msg in st.session_state.chat_history:
-        st.chat_message("user").write(f"**{msg['user']}**: {msg['text']}")
+    st.header("📊 مخزن البيانات (The Vault)")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.metric("رصيد العملات 🪙", f"{st.session_state.vault['balance']} NAWA")
+    with c2:
+        st.metric("نقاط الخبرة ✨", st.session_state.vault['exp'])
     
-    if prompt := st.chat_input("تحدث مع السياديين..."):
-        if user_secret:
-            u_name = generate_nawa_did(user_secret)[:8]
-            st.session_state.chat_history.append({"user": u_name, "text": prompt})
+    st.subheader("📜 سجل العمليات")
+    if st.session_state.vault['logs']:
+        for log in reversed(st.session_state.vault['logs']):
+            st.write(f"• {log}")
+    else:
+        st.write("لا توجد عمليات مسجلة بعد.")
+
+# --- TAB 4: المجتمع (Chat) ---
+with tabs[3]:
+    st.header("💬 غرفة تنسيق السياديين")
+    if not user_key:
+        st.warning("يرجى تفعيل الهوية من القائمة الجانبية للمشاركة في المحادثة.")
+    else:
+        # عرض الرسائل
+        for m in st.session_state.chat:
+            with st.chat_message("user"):
+                st.write(f"**{m['sender']}**: {m['text']}")
+        
+        # إرسال رسالة
+        if p := st.chat_input("أرسل رسالة مشفرة..."):
+            st.session_state.chat.append({"sender": generate_did(user_key)[:8], "text": p})
             st.rerun()
 
-# --- قسم المتجر ---
-with tabs[3]:
-    st.subheader("🛒 المتجر الرقمي")
-    st.write("حول رصيدك إلى ميزات!")
-    st.button("🔓 فتح أدوات البحث المتقدم (500 🪙)", disabled=True)
-    # --- إضافة قسم المتصفح المشفر داخل التبويبات ---
-with tabs[0]: # سنضعه داخل قسم الرادار أو كقسم مستقل
-    st.divider()
-    st.subheader("🌐 بوابة العبور الآمنة (Proxy)")
-    
-    url_to_proxy = st.text_input("أدخل رابط الموقع المحجوب (مثال: https://example.com):")
-    
-    if st.button("🚀 تصفح عبر نوى"):
-        if url_to_proxy:
-            try:
-                # محاكاة متصفح حقيقي لتجنب الحظر
-                headers = {'User-Agent': 'Mozilla/5.0'}
-                response = requests.get(url_to_proxy, headers=headers, timeout=10)
-                
-                if response.status_code == 200:
-                    st.success("تم الاتصال بنجاح عبر سيرفر نوى!")
-                    # عرض محتوى الموقع داخل إطار (Iframe) أو كنص
-                    st.components.v1.html(response.text, height=600, scrolling=True)
-                else:
-                    st.error(f"فشل الوصول: رمز الخطأ {response.status_code}")
-            except Exception as e:
-                st.error(f"حدث خطأ أثناء التشفير: {e}")
-    
-    
+# --- تذييل الصفحة ---
+st.divider()
+st.caption("نظام نـوى - مشروع سيادي مفتوح المصدر لتعزيز الاستقلال المعرفي.")
